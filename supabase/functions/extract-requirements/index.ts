@@ -33,8 +33,8 @@ async function parsePdf(bytes: Uint8Array): Promise<{ text: string; pages: numbe
   return { text: Array.isArray(text) ? text.join("\n") : text, pages: totalPages };
 }
 
-async function parseDocx(bytes: Uint8Array): Promise<{ text: string; pages: number }> {
-  const result = await mammoth.extractRawText({ arrayBuffer: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) });
+async function parseDocx(buffer: ArrayBuffer): Promise<{ text: string; pages: number }> {
+  const result = await mammoth.extractRawText({ arrayBuffer: buffer });
   return { text: result.value, pages: 1 };
 }
 
@@ -98,8 +98,8 @@ Deno.serve(async (req) => {
       const isDocx = file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || file.name.toLowerCase().endsWith(".docx");
       if (!isPdf && !isDocx) throw new Error("Only PDF and DOCX files are supported");
       filename = file.name;
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      const parsed = isPdf ? await parsePdf(bytes) : await parseDocx(bytes);
+      const buffer = await file.arrayBuffer();
+      const parsed = isPdf ? await parsePdf(new Uint8Array(buffer)) : await parseDocx(buffer);
       text = parsed.text;
       pages = parsed.pages;
       if (text.length / Math.max(pages, 1) < 100) throw new Error("Scanned PDF detected — text extraction not supported");
