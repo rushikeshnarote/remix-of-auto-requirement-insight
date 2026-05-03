@@ -28,11 +28,15 @@ Confidence: start 1.0. −0.2 per vague word. −0.3 if actor missing. −0.2 if
 Return JSON object: { "results": [...] }. No markdown, no preamble.`;
 
 function splitSentences(text: string): string[] {
-  return text
-    .replace(/\s+/g, " ")
-    .split(/(?<=[.!?])\s+(?=[A-Z])/)
+  const cleaned = text.replace(/\s+/g, " ").trim();
+  // Split on sentence punctuation OR newlines/bullets; be lenient
+  const parts = cleaned
+    .split(/(?<=[.!?])\s+|(?:\s*[•\-\*]\s+)|(?:\s{2,})/)
     .map((s) => s.trim())
-    .filter((s) => s.length > 15 && s.length < 600);
+    .filter((s) => s.length >= 5 && s.length < 800);
+  // Fallback: if splitting yielded nothing useful, return the whole text as one item
+  if (parts.length === 0 && cleaned.length >= 5) return [cleaned];
+  return parts;
 }
 
 async function parsePdf(bytes: Uint8Array): Promise<{ text: string; pages: number }> {
