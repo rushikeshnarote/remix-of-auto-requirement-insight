@@ -36,7 +36,47 @@ export default function Dashboard() {
   const incomplete = reqs.filter(r => r.status === "Incomplete").length;
   const lowConf = reqs.filter(r => r.confidence < 0.5).length;
   const avgConf = total > 0 ? reqs.reduce((s, r) => s + Number(r.confidence), 0) / total : 0;
-  const health = Math.max(0, Math.round(100 - (ambiguous * 5) - (incomplete * 7) - (lowConf * 4)));
+
+  // NFR subtype coverage
+  const nfrSubtypes = new Set(reqs.filter(r => r.type === "NonFunctional" && r.nfr_subtype).map(r => r.nfr_subtype));
+  const expectedNfr = ["Performance", "Security", "Usability", "Reliability"];
+  const missingNfr = expectedNfr.filter(s => !nfrSubtypes.has(s));
+
+  // Build gap list + health
+  const gaps: { label: string; severity: "high" | "med" | "low"; fix: string }[] = [];
+
+  if (total === 0) {
+    gaps.push({
+      label: "No requirements detected in this document",
+      severity: "high",
+      fix: "Use modal verbs (shall, must, should, will). Example: \"The system shall allow users to reset their password via email.\"",
+    });
+  } else {
+    if (functional === 0) gaps.push({ label: "No functional requirements", severity: "high", fix: "Describe what the system does — e.g. \"The system shall send a confirmation email after signup.\"" });
+    if (nfr === 0) gaps.push({ label: "No non-functional requirements (NFRs)", severity: "high", fix: "Add quality attributes: performance, security, usability, reliability." });
+    if (constraint === 0) gaps.push({ label: "No constraints captured", severity: "low", fix: "List technical/business constraints — e.g. \"Must comply with GDPR\" or \"Must run on AWS.\"" });
+    missingNfr.forEach(s => {
+      const examples: Record<string, string> = {
+        Performance: "\"The system shall respond to search queries within 2 seconds under 1000 concurrent users.\"",
+        Security: "\"All user passwords shall be hashed using bcrypt with a minimum cost factor of 12.\"",
+        Usability: "\"A new user shall be able to complete signup in under 60 seconds without external help.\"",
+        Reliability: "\"The system shall maintain 99.9% uptime measured monthly.\"",
+      };
+      gaps.push({ label: `Missing ${s} NFR`, severity: "med", fix: `Add a ${s.toLowerCase()} requirement. Example: ${examples[s]}` });
+    });
+    if (ambiguous > 0) gaps.push({ label: `${ambiguous} ambiguous requirement${ambiguous > 1 ? "s" : ""}`, severity: "med", fix: "Replace vague words (fast, easy, user-friendly) with measurable criteria." });
+    if (incomplete > 0) gaps.push({ label: `${incomplete} incomplete requirement${incomplete > 1 ? "s" : ""}`, severity: "high", fix: "Add an actor (who) and an action (what). Format: \"The [actor] shall [action] [criteria].\"" });
+    if (lowConf > 0) gaps.push({ label: `${lowConf} low-confidence requirement${lowConf > 1 ? "s" : ""}`, severity: "med", fix: "Rewrite using active voice and explicit subjects." });
+    if (avgConf < 0.7) gaps.push({ label: `Average confidence is low (${(avgConf * 100).toFixed(0)}%)`, severity: "med", fix: "Tighten language across the document — prefer \"shall\" + measurable outcomes." });
+  }
+
+  // Health: penalize each gap by severity, plus ratio of clean reqs
+  const sevWeight = { high: 25, med: 12, low: 5 };
+  const gapPenalty = gaps.reduce((s, g) => s + sevWeight[g.severity], 0);
+  const cleanRatio = total > 0 ? (total - ambiguous - incomplete - lowConf) / total : 0;
+  const health = total === 0 ? 0 : Math.max(0, Math.min(100, Math.round(cleanRatio * 100 - gapPenalty)));
+
+  const healthColor = health >= 75 ? "text-[hsl(var(--confidence-high))]" : health >= 50 ? "text-[hsl(var(--confidence-mid))]" : "text-[hsl(var(--confidence-low))]";
 
   return (
     <div>
@@ -60,23 +100,54 @@ export default function Dashboard() {
         ))}
         <div className="border border-border rounded bg-card p-3">
           <div className="text-xs text-muted-foreground">Health Score</div>
-          <div className={`text-lg font-semibold mt-0.5 ${health >= 75 ? "text-[hsl(var(--confidence-high))]" : health >= 50 ? "text-[hsl(var(--confidence-mid))]" : "text-[hsl(var(--confidence-low))]"}`}>
+          <div className={`text-lg font-semibold mt-0.5 ${healthColor}`}>
             {health}/100
           </div>
         </div>
       </div>
 
-      <div className="border border-border rounded bg-card p-6 text-sm text-muted-foreground">
-        Full requirements table, filters, inline editing, Improve modal, and Excel/PDF exports come in Phase 2.
+      {/* Gaps & recommendations */}
+      <div className="border border-border rounded bg-card p-5 mb-6">
+        <h2 className="text-sm font-semibold mb-1">What this document lacks</h2>
+        <p className="text-xs text-muted-foreground mb-4">
+          {gaps.length === 0
+            ? "Looks solid — no major gaps detected."
+            : `${gaps.length} issue${gaps.length > 1 ? "s" : ""} found. Address these to upgrade your requirements quality.`}
+        </p>
+        {doc.status === "failed" && (
+          <div className="text-xs mb-3 text-[hsl(var(--confidence-low))]">
+            Analysis failed: {doc.error_message ?? "unknown error"}
+          </div>
+        )}
+        <ul className="space-y-3">
+          {gaps.map((g, i) => (
+            <li key={i} className="flex gap-3">
+              <span className={`mt-0.5 text-[10px] uppercase font-medium px-1.5 py-0.5 rounded shrink-0 ${
+                g.severity === "high" ? "bg-[hsl(var(--confidence-low))]/15 text-[hsl(var(--confidence-low))]" :
+                g.severity === "med" ? "bg-[hsl(var(--confidence-mid))]/15 text-[hsl(var(--confidence-mid))]" :
+                "bg-secondary text-muted-foreground"
+              }`}>{g.severity}</span>
+              <div>
+                <div className="text-sm font-medium">{g.label}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{g.fix}</div>
+              </div>
+            </li>
+          ))}
+        </ul>
         {total === 0 && (
-          <div className="mt-3 text-foreground">
-            {doc.status === "failed" ? `Analysis failed: ${doc.error_message ?? "unknown error"}` : "No requirements were extracted from this document."}
+          <div className="mt-5 pt-4 border-t border-border">
+            <div className="text-sm font-medium mb-1">How to upgrade</div>
+            <ol className="text-xs text-muted-foreground list-decimal list-inside space-y-1">
+              <li>Re-upload after rewriting vague statements as testable rules.</li>
+              <li>Cover all four NFR categories: Performance, Security, Usability, Reliability.</li>
+              <li>Always name the actor (user, admin, system) and the measurable outcome.</li>
+            </ol>
           </div>
         )}
       </div>
 
       {total > 0 && (
-        <div className="mt-6 border border-border rounded bg-card overflow-hidden">
+        <div className="border border-border rounded bg-card overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-secondary/60 border-b border-border">
               <tr className="text-left text-xs uppercase text-muted-foreground">
