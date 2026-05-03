@@ -4,6 +4,7 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
+import { Zap } from "lucide-react";
 
 const registerSchema = z.object({
   username: z.string().trim().min(3, "Username must be at least 3 characters").max(50),
@@ -36,10 +37,7 @@ export default function AuthPage() {
         const { error } = await supabase.auth.signUp({
           email: parsed.data.email,
           password: parsed.data.password,
-          options: {
-            data: { username: parsed.data.username },
-            emailRedirectTo: `${window.location.origin}/`,
-          },
+          options: { data: { username: parsed.data.username }, emailRedirectTo: `${window.location.origin}/` },
         });
         if (error) { toast.error(error.message); return; }
         toast.success("Account created");
@@ -48,8 +46,7 @@ export default function AuthPage() {
         const parsed = loginSchema.safeParse(form);
         if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
         const { error } = await supabase.auth.signInWithPassword({
-          email: parsed.data.email,
-          password: parsed.data.password,
+          email: parsed.data.email, password: parsed.data.password,
         });
         if (error) { toast.error(error.message); return; }
         nav("/");
@@ -58,22 +55,25 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-6">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 sm:px-6 relative">
+      <div className="w-full max-w-md relative z-10 animate-fade-in">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-semibold text-primary">AutoReq</h1>
-          <p className="text-sm text-muted-foreground mt-1">Requirements Extraction Tool</p>
+          <div className="inline-flex items-center gap-2 mb-3">
+            <Zap className="w-8 h-8 text-primary animate-pulse" />
+            <h1 className="text-4xl font-bold gradient-text">AutoReq</h1>
+          </div>
+          <p className="text-sm text-accent neon-text-cyan tracking-widest uppercase">// Requirements Extraction Tool</p>
         </div>
 
-        <div className="border border-border rounded bg-card p-6">
-          <div className="flex border-b border-border mb-5">
+        <div className="glass-panel rounded-lg p-6 sm:p-8 neon-border scan-line">
+          <div className="flex border-b border-border mb-6">
             {(["login", "register"] as const).map((m) => (
               <button
                 key={m}
                 type="button"
                 onClick={() => setMode(m)}
-                className={`flex-1 pb-2.5 text-sm font-medium border-b-2 -mb-px ${
-                  mode === m ? "border-primary text-primary" : "border-transparent text-muted-foreground"
+                className={`flex-1 pb-3 text-sm font-medium border-b-2 -mb-px transition-all ${
+                  mode === m ? "border-primary text-primary neon-text" : "border-transparent text-muted-foreground hover:text-accent"
                 }`}
               >
                 {m === "login" ? "Sign In" : "Register"}
@@ -91,9 +91,9 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={busy}
-              className="w-full bg-primary text-primary-foreground py-2 rounded text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
+              className="w-full cyber-btn text-primary-foreground py-2.5 rounded-md text-sm font-bold uppercase tracking-wider disabled:opacity-50"
             >
-              {busy ? "Please wait…" : mode === "login" ? "Sign In" : "Create Account"}
+              {busy ? "Connecting…" : mode === "login" ? "Access System" : "Create Account"}
             </button>
           </form>
         </div>
@@ -105,12 +105,12 @@ export default function AuthPage() {
 function Field({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-foreground mb-1.5">{label}</label>
+      <label className="block text-xs font-medium text-accent mb-1.5 uppercase tracking-wider">{label}</label>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 text-sm border border-input rounded bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+        className="w-full px-3 py-2 text-sm border border-input rounded-md bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
         required
       />
     </div>
