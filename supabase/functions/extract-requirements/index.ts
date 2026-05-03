@@ -131,9 +131,9 @@ Deno.serve(async (req) => {
     if (docErr) throw docErr;
     docId = doc.id;
 
-    // Pre-filter
+    // Pre-filter — keep ALL non-trivial sentences; let the LLM decide
     const sentences = splitSentences(text);
-    const candidates = sentences.filter((s) => MODAL_VERBS.test(s));
+    const candidates = sentences.length > 0 ? sentences : [text.trim()];
     const limited = candidates.slice(0, 200);
 
     await supabase.from("documents").update({ stage: "extracting" }).eq("id", docId);
