@@ -7,9 +7,9 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground text-sm">Loading…</div>;
   if (!user) return <Navigate to="/auth" replace />;
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
       <Navbar />
-      <main className="max-w-6xl mx-auto px-6 py-8">{children}</main>
+      <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 animate-fade-in">{children}</main>
     </div>
   );
 }
