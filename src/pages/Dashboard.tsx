@@ -182,15 +182,31 @@ export default function Dashboard() {
 }
 
 function TypeBadge({ type }: { type: string }) {
+  const normalizedType = normalizeType(type);
   const map: Record<string, string> = {
     Functional: "bg-[hsl(var(--type-functional-bg))] text-[hsl(var(--type-functional))]",
     NonFunctional: "bg-[hsl(var(--type-nonfunctional-bg))] text-[hsl(var(--type-nonfunctional))]",
     Constraint: "bg-[hsl(var(--type-constraint-bg))] text-[hsl(var(--type-constraint))]",
   };
-  return <span className={`text-xs px-2 py-0.5 rounded ${map[type] ?? "bg-secondary text-muted-foreground"}`}>{type}</span>;
+  return <span className={`text-xs px-2 py-0.5 rounded ${map[normalizedType] ?? "bg-secondary text-muted-foreground"}`}>{normalizedType}</span>;
 }
 function ConfBadge({ v }: { v: number }) {
-  const pct = Math.round(v * 100);
-  const color = v >= 0.75 ? "text-[hsl(var(--confidence-high))]" : v >= 0.5 ? "text-[hsl(var(--confidence-mid))]" : "text-[hsl(var(--confidence-low))]";
+  const confidence = normalizedConfidence(v);
+  const pct = Math.round(confidence * 100);
+  const color = confidence >= 0.75 ? "text-[hsl(var(--confidence-high))]" : confidence >= 0.5 ? "text-[hsl(var(--confidence-mid))]" : "text-[hsl(var(--confidence-low))]";
   return <span className={`text-xs font-medium ${color}`}>{pct}%</span>;
+}
+
+function normalizeType(type: string | null | undefined) {
+  const compact = String(type ?? "Unknown").toLowerCase().replace(/[^a-z]/g, "");
+  if (compact === "functional") return "Functional";
+  if (compact === "nonfunctional" || compact === "nfr") return "NonFunctional";
+  if (compact === "constraint") return "Constraint";
+  return "Unknown";
+}
+
+function normalizedConfidence(value: number | string | null | undefined) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 0;
+  return Math.max(0, Math.min(1, numeric > 1 ? numeric / 100 : numeric));
 }
