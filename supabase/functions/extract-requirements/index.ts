@@ -34,7 +34,7 @@ async function parsePdf(bytes: Uint8Array): Promise<{ text: string; pages: numbe
 }
 
 async function parseDocx(buffer: ArrayBuffer): Promise<{ text: string; pages: number }> {
-  const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+  const result = await mammoth.extractRawText({ buffer });
   return { text: result.value, pages: 1 };
 }
 
