@@ -29,16 +29,17 @@ export default function Dashboard() {
   if (!doc) return <div className="text-sm text-muted-foreground">Document not found. <Link to="/documents" className="text-primary hover:underline">Back</Link></div>;
 
   const total = reqs.length;
-  const functional = reqs.filter(r => r.type === "Functional").length;
-  const nfr = reqs.filter(r => r.type === "NonFunctional").length;
-  const constraint = reqs.filter(r => r.type === "Constraint").length;
-  const ambiguous = reqs.filter(r => r.status === "Ambiguous" || (r.ambiguity_flags?.length ?? 0) > 0).length;
-  const incomplete = reqs.filter(r => r.status === "Incomplete").length;
-  const lowConf = reqs.filter(r => r.confidence < 0.5).length;
-  const avgConf = total > 0 ? reqs.reduce((s, r) => s + Number(r.confidence), 0) / total : 0;
+  const normalizedReqs = reqs.map((r) => ({ ...r, type: normalizeType(r.type) }));
+  const functional = normalizedReqs.filter(r => r.type === "Functional").length;
+  const nfr = normalizedReqs.filter(r => r.type === "NonFunctional").length;
+  const constraint = normalizedReqs.filter(r => r.type === "Constraint").length;
+  const ambiguous = normalizedReqs.filter(r => r.status === "Ambiguous" || (r.ambiguity_flags?.length ?? 0) > 0).length;
+  const incomplete = normalizedReqs.filter(r => r.status === "Incomplete").length;
+  const lowConf = normalizedReqs.filter(r => Number(r.confidence) < 0.5).length;
+  const avgConf = total > 0 ? normalizedReqs.reduce((s, r) => s + normalizedConfidence(r.confidence), 0) / total : 0;
 
   // NFR subtype coverage
-  const nfrSubtypes = new Set(reqs.filter(r => r.type === "NonFunctional" && r.nfr_subtype).map(r => r.nfr_subtype));
+  const nfrSubtypes = new Set(normalizedReqs.filter(r => r.type === "NonFunctional" && r.nfr_subtype).map(r => r.nfr_subtype));
   const expectedNfr = ["Performance", "Security", "Usability", "Reliability"];
   const missingNfr = expectedNfr.filter(s => !nfrSubtypes.has(s));
 
@@ -70,11 +71,15 @@ export default function Dashboard() {
     if (avgConf < 0.7) gaps.push({ label: `Average confidence is low (${(avgConf * 100).toFixed(0)}%)`, severity: "med", fix: "Tighten language across the document — prefer \"shall\" + measurable outcomes." });
   }
 
-  // Health: penalize each gap by severity, plus ratio of clean reqs
-  const sevWeight = { high: 25, med: 12, low: 5 };
-  const gapPenalty = gaps.reduce((s, g) => s + sevWeight[g.severity], 0);
-  const cleanRatio = total > 0 ? (total - ambiguous - incomplete - lowConf) / total : 0;
-  const health = total === 0 ? 0 : Math.max(0, Math.min(100, Math.round(cleanRatio * 100 - gapPenalty)));
+  // Health: score the uploaded document proportionally instead of subtracting every gap to zero.
+  const typeCoverage = ([functional, nfr, constraint].filter(Boolean).length / 3) * 100;
+  const nfrCoverage = ((expectedNfr.length - missingNfr.length) / expectedNfr.length) * 100;
+  const clarityScore = total > 0
+    ? Math.max(0, 100 - (ambiguous / total) * 35 - (incomplete / total) * 45 - (lowConf / total) * 25)
+    : 0;
+  const healthRaw = avgConf * 100 * 0.45 + clarityScore * 0.25 + typeCoverage * 0.2 + nfrCoverage * 0.1;
+  const criticalPenalty = total > 0 && functional === 0 ? 15 : 0;
+  const health = total === 0 ? 0 : Math.max(10, Math.min(100, Math.round(healthRaw - criticalPenalty)));
 
   const healthColor = health >= 75 ? "text-[hsl(var(--confidence-high))]" : health >= 50 ? "text-[hsl(var(--confidence-mid))]" : "text-[hsl(var(--confidence-low))]";
 
@@ -177,15 +182,31 @@ export default function Dashboard() {
 }
 
 function TypeBadge({ type }: { type: string }) {
+  const normalizedType = normalizeType(type);
   const map: Record<string, string> = {
     Functional: "bg-[hsl(var(--type-functional-bg))] text-[hsl(var(--type-functional))]",
     NonFunctional: "bg-[hsl(var(--type-nonfunctional-bg))] text-[hsl(var(--type-nonfunctional))]",
     Constraint: "bg-[hsl(var(--type-constraint-bg))] text-[hsl(var(--type-constraint))]",
   };
-  return <span className={`text-xs px-2 py-0.5 rounded ${map[type] ?? "bg-secondary text-muted-foreground"}`}>{type}</span>;
+  return <span className={`text-xs px-2 py-0.5 rounded ${map[normalizedType] ?? "bg-secondary text-muted-foreground"}`}>{normalizedType}</span>;
 }
 function ConfBadge({ v }: { v: number }) {
-  const pct = Math.round(v * 100);
-  const color = v >= 0.75 ? "text-[hsl(var(--confidence-high))]" : v >= 0.5 ? "text-[hsl(var(--confidence-mid))]" : "text-[hsl(var(--confidence-low))]";
+  const confidence = normalizedConfidence(v);
+  const pct = Math.round(confidence * 100);
+  const color = confidence >= 0.75 ? "text-[hsl(var(--confidence-high))]" : confidence >= 0.5 ? "text-[hsl(var(--confidence-mid))]" : "text-[hsl(var(--confidence-low))]";
   return <span className={`text-xs font-medium ${color}`}>{pct}%</span>;
+}
+
+function normalizeType(type: string | null | undefined) {
+  const compact = String(type ?? "Unknown").toLowerCase().replace(/[^a-z]/g, "");
+  if (compact === "functional") return "Functional";
+  if (compact === "nonfunctional" || compact === "nfr") return "NonFunctional";
+  if (compact === "constraint") return "Constraint";
+  return "Unknown";
+}
+
+function normalizedConfidence(value: number | string | null | undefined) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 0;
+  return Math.max(0, Math.min(1, numeric > 1 ? numeric / 100 : numeric));
 }
