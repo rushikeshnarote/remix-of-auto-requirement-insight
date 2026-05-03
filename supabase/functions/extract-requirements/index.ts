@@ -33,8 +33,8 @@ async function parsePdf(bytes: Uint8Array): Promise<{ text: string; pages: numbe
   return { text: Array.isArray(text) ? text.join("\n") : text, pages: totalPages };
 }
 
-async function parseDocx(bytes: Uint8Array): Promise<{ text: string; pages: number }> {
-  const result = await mammoth.extractRawText({ arrayBuffer: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) });
+async function parseDocx(buffer: ArrayBuffer): Promise<{ text: string; pages: number }> {
+  const result = await mammoth.extractRawText({ arrayBuffer: buffer });
   return { text: result.value, pages: 1 };
 }
 
