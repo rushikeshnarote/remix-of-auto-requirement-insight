@@ -2,70 +2,74 @@
 @tailwind components;
 @tailwind utilities;
 
-/* AutoReq — Cyberpunk neon design system */
+/* AutoReq — Modern futuristic dark theme (single cyan accent) */
 
 @layer base {
   :root {
-    --background: 240 30% 6%;
-    --foreground: 180 100% 92%;
+    /* #0B0F14 */
+    --background: 212 29% 6%;
+    /* #E6EEF8 */
+    --foreground: 213 50% 94%;
 
-    --card: 240 35% 9%;
-    --card-foreground: 180 100% 92%;
+    /* #18212B card */
+    --card: 211 27% 13%;
+    --card-foreground: 213 50% 94%;
 
-    --popover: 240 35% 9%;
-    --popover-foreground: 180 100% 92%;
+    --popover: 211 27% 13%;
+    --popover-foreground: 213 50% 94%;
 
-    /* Neon magenta primary */
-    --primary: 320 100% 60%;
-    --primary-foreground: 240 30% 6%;
-    --primary-glow: 320 100% 70%;
+    /* #22D3EE electric cyan */
+    --primary: 187 85% 53%;
+    --primary-foreground: 212 29% 6%;
+    --primary-glow: 187 85% 65%;
 
-    /* Cyan accent */
-    --accent: 185 100% 55%;
-    --accent-foreground: 240 30% 6%;
-    --accent-glow: 185 100% 65%;
+    /* Accent same family, slightly cooler */
+    --accent: 187 85% 53%;
+    --accent-foreground: 212 29% 6%;
+    --accent-glow: 187 85% 65%;
 
-    /* Electric purple */
-    --secondary: 270 70% 18%;
-    --secondary-foreground: 270 100% 90%;
+    /* #121821 surface as secondary */
+    --secondary: 212 29% 10%;
+    --secondary-foreground: 213 50% 94%;
 
-    --muted: 240 30% 14%;
-    --muted-foreground: 240 20% 65%;
+    --muted: 212 25% 14%;
+    /* #94A3B8 */
+    --muted-foreground: 215 20% 65%;
 
-    --destructive: 0 95% 60%;
+    --destructive: 0 75% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 280 60% 22%;
-    --input: 280 60% 22%;
-    --ring: 320 100% 60%;
+    --border: 212 25% 18%;
+    --input: 212 25% 18%;
+    --ring: 187 85% 53%;
 
     --radius: 0.5rem;
 
-    /* Type badges */
-    --type-functional: 185 100% 60%;
-    --type-functional-bg: 185 100% 60% / 0.12;
-    --type-nonfunctional: 50 100% 60%;
-    --type-nonfunctional-bg: 50 100% 60% / 0.12;
-    --type-constraint: 280 100% 70%;
-    --type-constraint-bg: 280 100% 70% / 0.12;
+    /* Type badges — keep single accent for functional, neutral tones for others */
+    --type-functional: 187 85% 60%;
+    --type-functional-bg: 187 85% 60% / 0.12;
+    --type-nonfunctional: 213 30% 75%;
+    --type-nonfunctional-bg: 213 30% 75% / 0.10;
+    --type-constraint: 215 20% 65%;
+    --type-constraint-bg: 215 20% 65% / 0.10;
 
-    --confidence-high: 145 100% 55%;
-    --confidence-mid: 45 100% 60%;
-    --confidence-low: 0 100% 65%;
+    --confidence-high: 152 60% 52%;
+    --confidence-mid: 40 90% 60%;
+    --confidence-low: 0 75% 62%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(320 100% 60%), hsl(270 100% 60%), hsl(185 100% 55%));
-    --gradient-cyber: linear-gradient(135deg, hsl(320 100% 60% / 0.2), hsl(185 100% 55% / 0.2));
-    --shadow-neon: 0 0 20px hsl(320 100% 60% / 0.5), 0 0 40px hsl(320 100% 60% / 0.3);
-    --shadow-cyan: 0 0 20px hsl(185 100% 55% / 0.5), 0 0 40px hsl(185 100% 55% / 0.3);
+    --gradient-primary: linear-gradient(135deg, hsl(187 85% 53%), hsl(195 80% 45%));
+    --gradient-cyber: linear-gradient(135deg, hsl(187 85% 53% / 0.15), hsl(212 29% 10% / 0.6));
+    --shadow-neon: 0 0 0 1px hsl(187 85% 53% / 0.4), 0 8px 24px -8px hsl(187 85% 53% / 0.35);
+    --shadow-cyan: 0 0 0 1px hsl(187 85% 53% / 0.4), 0 8px 24px -8px hsl(187 85% 53% / 0.35);
 
-    --sidebar-background: 240 35% 8%;
-    --sidebar-foreground: 180 100% 92%;
-    --sidebar-primary: 320 100% 60%;
-    --sidebar-primary-foreground: 240 30% 6%;
-    --sidebar-accent: 270 70% 18%;
-    --sidebar-accent-foreground: 270 100% 90%;
-    --sidebar-border: 280 60% 22%;
-    --sidebar-ring: 320 100% 60%;
+    --sidebar-background: 212 29% 8%;
+    --sidebar-foreground: 213 50% 94%;
+    --sidebar-primary: 187 85% 53%;
+    --sidebar-primary-foreground: 212 29% 6%;
+    --sidebar-accent: 212 29% 12%;
+    --sidebar-accent-foreground: 213 50% 94%;
+    --sidebar-border: 212 25% 18%;
+    --sidebar-ring: 187 85% 53%;
   }
 }
 
@@ -75,9 +79,8 @@
     @apply bg-background text-foreground;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background-image:
-      radial-gradient(ellipse at top left, hsl(320 100% 60% / 0.15), transparent 50%),
-      radial-gradient(ellipse at bottom right, hsl(185 100% 55% / 0.12), transparent 50%),
-      radial-gradient(ellipse at center, hsl(270 100% 50% / 0.08), transparent 60%);
+      radial-gradient(ellipse at top, hsl(187 85% 53% / 0.07), transparent 60%),
+      radial-gradient(ellipse at bottom right, hsl(212 50% 20% / 0.4), transparent 60%);
     background-attachment: fixed;
     min-height: 100vh;
   }
@@ -87,34 +90,35 @@
     inset: 0;
     pointer-events: none;
     background-image:
-      linear-gradient(hsl(320 100% 60% / 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(185 100% 55% / 0.04) 1px, transparent 1px);
-    background-size: 40px 40px;
+      linear-gradient(hsl(213 30% 100% / 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(213 30% 100% / 0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
     z-index: 0;
   }
   h1, h2, h3, h4 {
     @apply text-foreground;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
     font-family: 'Inter', sans-serif;
   }
 }
 
 @layer utilities {
   .neon-text {
-    text-shadow: 0 0 10px hsl(var(--primary) / 0.8), 0 0 20px hsl(var(--primary) / 0.5);
+    text-shadow: 0 0 8px hsl(var(--primary) / 0.35);
   }
   .neon-text-cyan {
-    text-shadow: 0 0 10px hsl(var(--accent) / 0.8), 0 0 20px hsl(var(--accent) / 0.5);
+    text-shadow: 0 0 8px hsl(var(--accent) / 0.35);
   }
   .neon-border {
-    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.5), 0 0 20px hsl(var(--primary) / 0.3);
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.4), 0 4px 20px -8px hsl(var(--primary) / 0.25);
   }
   .neon-border-cyan {
-    box-shadow: 0 0 0 1px hsl(var(--accent) / 0.5), 0 0 20px hsl(var(--accent) / 0.3);
+    box-shadow: 0 0 0 1px hsl(var(--accent) / 0.4), 0 4px 20px -8px hsl(var(--accent) / 0.25);
   }
   .glass-panel {
-    background: linear-gradient(135deg, hsl(240 35% 9% / 0.7), hsl(270 50% 12% / 0.5));
-    backdrop-filter: blur(12px);
+    background: linear-gradient(135deg, hsl(211 27% 13% / 0.75), hsl(212 29% 10% / 0.6));
+    backdrop-filter: blur(14px);
     border: 1px solid hsl(var(--border));
   }
   .gradient-text {
@@ -125,15 +129,16 @@
   }
   .cyber-btn {
     position: relative;
-    background: var(--gradient-primary);
-    background-size: 200% 200%;
-    transition: all 0.3s ease;
-    animation: gradient-shift 4s ease infinite;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    transition: all 0.2s ease;
   }
   .cyber-btn:hover {
-    box-shadow: var(--shadow-neon);
+    background: hsl(var(--primary-glow));
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.5), 0 6px 20px -6px hsl(var(--primary) / 0.5);
     transform: translateY(-1px);
   }
+  .cyber-btn:active { transform: translateY(0); }
   .scan-line {
     position: relative;
     overflow: hidden;
@@ -142,25 +147,22 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, transparent, hsl(var(--accent) / 0.15), transparent);
-    animation: scan 3s linear infinite;
-  }
-  @keyframes gradient-shift {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
+    pointer-events: none;
+    background: linear-gradient(180deg, transparent, hsl(var(--accent) / 0.06), transparent);
+    animation: scan 6s linear infinite;
   }
   @keyframes scan {
     0% { transform: translateY(-100%); }
     100% { transform: translateY(100%); }
   }
   @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.3); }
-    50% { box-shadow: 0 0 40px hsl(var(--primary) / 0.6); }
+    0%, 100% { box-shadow: 0 0 0 1px hsl(var(--primary) / 0.3); }
+    50% { box-shadow: 0 0 0 1px hsl(var(--primary) / 0.5), 0 0 24px hsl(var(--primary) / 0.25); }
   }
-  .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
-  .animate-fade-in { animation: fade-in 0.5s ease-out; }
+  .animate-pulse-glow { animation: pulse-glow 2.5s ease-in-out infinite; }
+  .animate-fade-in { animation: fade-in 0.4s ease-out; }
   @keyframes fade-in {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
 }
