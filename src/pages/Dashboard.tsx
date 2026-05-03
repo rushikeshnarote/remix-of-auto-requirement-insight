@@ -85,52 +85,47 @@ export default function Dashboard() {
 
   return (
     <div>
-      <header className="mb-6 flex items-baseline justify-between">
+      <header className="mb-6 flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2">
         <div>
-          <Link to="/documents" className="text-xs text-muted-foreground hover:text-foreground">← My Documents</Link>
-          <h1 className="text-xl font-semibold mt-1">{doc.name}</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Analyzed {new Date(doc.upload_time).toLocaleString()}</p>
+          <Link to="/documents" className="text-xs text-accent hover:text-primary transition-colors">← My Documents</Link>
+          <h1 className="text-xl sm:text-2xl font-bold gradient-text mt-1">{doc.name}</h1>
+          <p className="text-xs text-muted-foreground mt-0.5"><span className="text-accent">// </span>Analyzed {new Date(doc.upload_time).toLocaleString()}</p>
         </div>
       </header>
 
-      <div className="grid grid-cols-7 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 mb-6">
         {[
           ["Total", total], ["Functional", functional], ["Non-Functional", nfr],
           ["Constraints", constraint], ["Ambiguous", ambiguous], ["Avg Confidence", `${(avgConf * 100).toFixed(0)}%`],
         ].map(([label, val]) => (
-          <div key={label as string} className="border border-border rounded bg-card p-3">
-            <div className="text-xs text-muted-foreground">{label}</div>
-            <div className="text-lg font-semibold mt-0.5">{val}</div>
+          <div key={label as string} className="glass-panel rounded-lg p-3 hover:border-primary/50 transition-all">
+            <div className="text-[10px] text-accent uppercase tracking-wider">{label}</div>
+            <div className="text-lg font-bold mt-0.5 text-foreground">{val}</div>
           </div>
         ))}
-        <div className="border border-border rounded bg-card p-3">
-          <div className="text-xs text-muted-foreground">Health Score</div>
-          <div className={`text-lg font-semibold mt-0.5 ${healthColor}`}>
-            {health}/100
-          </div>
+        <div className="glass-panel rounded-lg p-3 col-span-2 sm:col-span-1 neon-border">
+          <div className="text-[10px] text-accent uppercase tracking-wider">Health Score</div>
+          <div className={`text-lg font-bold mt-0.5 ${healthColor}`}>{health}/100</div>
         </div>
       </div>
 
-      {/* Gaps & recommendations */}
-      <div className="border border-border rounded bg-card p-5 mb-6">
-        <h2 className="text-sm font-semibold mb-1">What this document lacks</h2>
+      <div className="glass-panel rounded-lg p-4 sm:p-5 mb-6 neon-border-cyan">
+        <h2 className="text-sm font-semibold mb-1 text-accent uppercase tracking-wider">⚠ What this document lacks</h2>
         <p className="text-xs text-muted-foreground mb-4">
           {gaps.length === 0
             ? "Looks solid — no major gaps detected."
             : `${gaps.length} issue${gaps.length > 1 ? "s" : ""} found. Address these to upgrade your requirements quality.`}
         </p>
         {doc.status === "failed" && (
-          <div className="text-xs mb-3 text-[hsl(var(--confidence-low))]">
-            Analysis failed: {doc.error_message ?? "unknown error"}
-          </div>
+          <div className="text-xs mb-3 text-destructive">Analysis failed: {doc.error_message ?? "unknown error"}</div>
         )}
         <ul className="space-y-3">
           {gaps.map((g, i) => (
             <li key={i} className="flex gap-3">
-              <span className={`mt-0.5 text-[10px] uppercase font-medium px-1.5 py-0.5 rounded shrink-0 ${
-                g.severity === "high" ? "bg-[hsl(var(--confidence-low))]/15 text-[hsl(var(--confidence-low))]" :
-                g.severity === "med" ? "bg-[hsl(var(--confidence-mid))]/15 text-[hsl(var(--confidence-mid))]" :
-                "bg-secondary text-muted-foreground"
+              <span className={`mt-0.5 text-[10px] uppercase font-bold px-2 py-0.5 rounded shrink-0 ${
+                g.severity === "high" ? "bg-destructive/15 text-destructive border border-destructive/30" :
+                g.severity === "med" ? "bg-[hsl(var(--confidence-mid))]/15 text-[hsl(var(--confidence-mid))] border border-[hsl(var(--confidence-mid))]/30" :
+                "bg-secondary text-muted-foreground border border-border"
               }`}>{g.severity}</span>
               <div>
                 <div className="text-sm font-medium">{g.label}</div>
@@ -141,7 +136,7 @@ export default function Dashboard() {
         </ul>
         {total === 0 && (
           <div className="mt-5 pt-4 border-t border-border">
-            <div className="text-sm font-medium mb-1">How to upgrade</div>
+            <div className="text-sm font-medium mb-1 text-primary">→ How to upgrade</div>
             <ol className="text-xs text-muted-foreground list-decimal list-inside space-y-1">
               <li>Re-upload after rewriting vague statements as testable rules.</li>
               <li>Cover all four NFR categories: Performance, Security, Usability, Reliability.</li>
@@ -152,29 +147,31 @@ export default function Dashboard() {
       </div>
 
       {total > 0 && (
-        <div className="border border-border rounded bg-card overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-secondary/60 border-b border-border">
-              <tr className="text-left text-xs uppercase text-muted-foreground">
-                <th className="px-3 py-2 font-medium">ID</th>
-                <th className="px-3 py-2 font-medium">Type</th>
-                <th className="px-3 py-2 font-medium">Requirement</th>
-                <th className="px-3 py-2 font-medium">Confidence</th>
-                <th className="px-3 py-2 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reqs.map((r) => (
-                <tr key={r.id} className="border-b border-border last:border-0">
-                  <td className="px-3 py-2 font-mono text-xs">{r.req_id}</td>
-                  <td className="px-3 py-2"><TypeBadge type={r.type} /></td>
-                  <td className="px-3 py-2">{r.req_text}</td>
-                  <td className="px-3 py-2"><ConfBadge v={Number(r.confidence)} /></td>
-                  <td className="px-3 py-2 text-xs">{r.status}</td>
+        <div className="glass-panel rounded-lg overflow-hidden neon-border-cyan">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[600px]">
+              <thead className="bg-primary/5 border-b border-border">
+                <tr className="text-left text-xs uppercase tracking-wider text-accent">
+                  <th className="px-3 py-2.5 font-medium">ID</th>
+                  <th className="px-3 py-2.5 font-medium">Type</th>
+                  <th className="px-3 py-2.5 font-medium">Requirement</th>
+                  <th className="px-3 py-2.5 font-medium">Confidence</th>
+                  <th className="px-3 py-2.5 font-medium">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {reqs.map((r) => (
+                  <tr key={r.id} className="border-b border-border last:border-0 hover:bg-primary/5 transition-colors">
+                    <td className="px-3 py-2 font-mono text-xs text-accent">{r.req_id}</td>
+                    <td className="px-3 py-2"><TypeBadge type={r.type} /></td>
+                    <td className="px-3 py-2">{r.req_text}</td>
+                    <td className="px-3 py-2"><ConfBadge v={Number(r.confidence)} /></td>
+                    <td className="px-3 py-2 text-xs">{r.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
