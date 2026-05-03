@@ -98,8 +98,8 @@ Deno.serve(async (req) => {
       const isDocx = file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || file.name.toLowerCase().endsWith(".docx");
       if (!isPdf && !isDocx) throw new Error("Only PDF and DOCX files are supported");
       filename = file.name;
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      const parsed = isPdf ? await parsePdf(bytes) : await parseDocx(bytes);
+      const buffer = await file.arrayBuffer();
+      const parsed = isPdf ? await parsePdf(new Uint8Array(buffer)) : await parseDocx(buffer);
       text = parsed.text;
       pages = parsed.pages;
       if (text.length / Math.max(pages, 1) < 100) throw new Error("Scanned PDF detected — text extraction not supported");
