@@ -11,13 +11,21 @@ const corsHeaders = {
 const VAGUE_WORDS = ["fast","slow","easy","simple","often","sometimes","many","few","some","quickly","efficient","user-friendly","robust","scalable","flexible","intuitive","reasonable","appropriate","minimal","maximum"];
 const MODAL_VERBS = /\b(shall|must|should|will|can(not)?|may|require[sd]?|need[s]? to)\b/i;
 
-const SYSTEM_PROMPT = `You are a software requirements analyst following IEEE 830 standards. You will be given a list of candidate sentences extracted from a stakeholder document. For each sentence, analyze it and return ONLY a valid JSON array with no preamble or markdown formatting.
+const SYSTEM_PROMPT = `You are a software requirements analyst following IEEE 830. You will receive sentences/fragments from a stakeholder document — these are often informal: meeting notes, emails, user stories, brief project descriptions. Your job is to AGGRESSIVELY extract software requirements even when the source is casual or terse. Infer implied requirements from informal phrasing.
 
-For each sentence return an object with: id (integer), is_requirement (boolean), type (one of: Functional, NonFunctional, Constraint, Unknown), nfr_subtype (one of: Performance, Security, Usability, Reliability, null — only if type is NonFunctional), confidence (float 0.0 to 1.0), ambiguity_flags (array of strings — vague words found, empty if none), actor (string or null), action (string or null), suggested_rewrite (string or null — only if ambiguity_flags is non-empty, must follow The system shall or The user must be able to format), status (one of: Valid, Ambiguous, Incomplete), priority (one of: High, Medium, Low — based on keyword emphasis).
+Examples of valid requirements you MUST extract:
+- "users login with google" → Functional requirement (system shall allow Google login)
+- "should be fast" → NonFunctional/Performance (ambiguous, needs rewrite)
+- "weather app shows forecast" → Functional (system shall display weather forecast)
+- "must work on mobile" → Constraint or NFR/Usability
 
-Confidence scoring: start at 1.0. Deduct 0.2 per ambiguous word. Deduct 0.3 if actor missing. Deduct 0.2 for passive voice with no subject. Minimum 0.1.
+Be generous: if a sentence describes ANY system behavior, capability, quality, or constraint — even informally — mark is_requirement=true. Only reject sentences that are pure greetings, signatures, or unrelated chatter.
 
-Return ONLY the JSON array. No explanation.`;
+For each input sentence return an object with: id (integer matching input index), is_requirement (boolean), type (Functional | NonFunctional | Constraint | Unknown), nfr_subtype (Performance | Security | Usability | Reliability | null), confidence (float 0.1–1.0), ambiguity_flags (array of vague words found), actor (string or null — infer "user"/"system"/"admin" if implied), action (string or null), suggested_rewrite (string formatted as "The system shall..." or "The user shall be able to..." — ALWAYS provide one if the original is informal/ambiguous, null only if already perfectly formal), status (Valid | Ambiguous | Incomplete), priority (High | Medium | Low).
+
+Confidence: start 1.0. −0.2 per vague word. −0.3 if actor missing. −0.2 if passive with no subject. Min 0.1. For informal but clear intent, keep confidence ≥0.5.
+
+Return JSON object: { "results": [...] }. No markdown, no preamble.`;
 
 function splitSentences(text: string): string[] {
   return text
